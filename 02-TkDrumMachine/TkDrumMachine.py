@@ -2,8 +2,12 @@
 
 #A Drum Machine by Tkinter
 from Tkinter import *
+import time
+import wave
+import pymedia.audio.sound as sound
 import tkFileDialog
 import tkMessageBox
+import threading
 import os
 
 
@@ -15,7 +19,10 @@ class DrumMachine():
 		self.widget_drum_name = []
 		self.widget_drum_file_name = [0] * MAX_DRUM_NUM
 		self.current_drum_no = 0
+		self.keep_playing = True
+		self.loop = False
 
+#basic UI
 	def create_top_bar(self):
 		topbar_frame = Frame(self.root)
 		topbar_frame.grid(row=0, column=0, columnspan=12, rowspan=10, padx=5, pady=5)
@@ -74,12 +81,12 @@ class DrumMachine():
 	def create_play_bar(self):
 		playbar_frame = Frame(self.root)
 		playbar_frame.grid(row=12, column=0,columnspan=13, sticky=W+E, padx=10, pady=5) 
-		button = Button(playbar_frame, text='Play')
-		button.grid(row=0, column=0, padx=2, pady=2)
-		button = Button(playbar_frame, text='Stop')
+		self.start_button = Button(playbar_frame, text='Play', command=self.play_in_threading)
+		self.start_button.grid(row=0, column=0, padx=2, pady=2)
+		button = Button(playbar_frame, text='Stop', command=self.stop_play)
 		button.grid(row=0, column=1, padx=2, pady=2)
 		loop = BooleanVar()
-		loopbutton = Checkbutton(playbar_frame, text='Loop', variable=loop)
+		loopbutton = Checkbutton(playbar_frame, text='Loop', variable=loop, command=lambda:self.loop_play(loop.get()))
 		loopbutton.grid(row=0, column=2, padx=2, pady=2)
 
 	def drum_load(self, drum_no):
@@ -98,6 +105,46 @@ class DrumMachine():
 			except:
 				tkMessageBox.showerror("Invalid", "Error loading drum samples")
 		return callback
+
+	def play_sound(self, sound_filename):
+		try:
+			self.s = wave.open(sound_filename, 'rb')
+			sample_rate = self.s.getframerate()
+			channels = self.s.getchannels()
+			frmt = sound.AFMT_S16_LE
+			self.snd = sound.Output(sample_rate, channels, frmt)
+			s = self.s.readframes(300000)
+			self.snd.play(s)
+		except:
+			pass
+
+	def play(self):
+		self.keep_playing = True
+		while self.keep_playing:
+			for i in range(len(self.button[0])):
+				for item in self.button:
+					try:
+						if item[i].cget('bg') == 'green':
+							if not self.widget_drum_file_name[sel.button.index(item)]:continue
+							sound_filename = self.widget_drum_file_name[self.button.index(item)]
+							self.play_sound(sound_filename)
+					except:
+						continue
+				time.sleep(3/4.0)
+				if self.loop == False: self.keep_playing = False
+			self.start_button.config(state='normal')
+
+	def play_in_threading(self):
+		self.start_button.config(state='disabled')
+		self.thread = threading.Thread(None, self.play, None,(), {})
+		self.thread.start()
+
+	def stop_play(self):
+		self.keep_playing = False
+		self.start_button.config(state='normal')
+
+	def loop_play(self,xval):
+		self.loop = xval
 
 	def app(self):
 		self.root = Tk()
