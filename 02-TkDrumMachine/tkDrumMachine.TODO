@@ -1,0 +1,6 @@
+ ☐ 1. complete test
+ ☐ 2. The current application checks if the button is green in color to decide whether the button is in the pressed state. Modify the code so that this logic is not decided based on the color of the button, but by a separate variable that keeps track of the selected buttons
+ ☐ 3. Add a tempo scale to your drum machine, which lets the user change the tempo of the beats using a slider
+ ☐ 4. Add volume control for each drum sample, allowing the user to change the volume individually for each drum sample.
+ ☐ 5. Add a mute button for each drum sample. If the Checkbutton is clicked for a given drum sample, the sound is not played for that row. This way, a user can stop a complete row from playing without changing the patterns in that row.
+ ☐ 6. Add a time clock to your drum machine, which displays the time elapsed since the last press of the play button.

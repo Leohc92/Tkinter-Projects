@@ -2,12 +2,14 @@
 
 #A Drum Machine by Tkinter
 from Tkinter import *
+import ttk
 import time
 import wave
 import pymedia.audio.sound as sound
 import tkFileDialog
 import tkMessageBox
 import threading
+import pickle
 import os
 
 
@@ -23,7 +25,53 @@ class DrumMachine():
 		self.loop = False
 		self.pattern_list = [None]*10
 
+
+	def save_project(self):
+		self.record_pattern()  #to make sure the last pattern is saved
+		file_name = tkFileDialog.asksaveasfilename(filetypes=[('Drum Beat File','*.bt')], title="Save project as...")
+		pickle.dump(self.pattern_list, open(file_name, "wb"))
+		self.root.title(os.path.basename(file_name) + " - Drum Beast")
+
+	def load_project(self):
+		file_name = tkFileDialog.askopenfilename(filetypes=[('Drum Beat File','*.bt')], title="Load Project")
+		if file_name == '' :return
+		self.root.title(os.path.basename(file_name) + " - Drum Beast")
+		fh = open(file_name, "rb")
+		try:
+			while True:
+				self.pattern_list = pickle.load(fh)
+		except EOFError:
+			pass
+		fh.close()
+		try:
+			self.reconstruct_pattern(0, self.pattern_list[0]['bpu'], self.pattern_list[0]['units'])
+		except:
+			tkMessageBox.showerror("Error", "An unexpected error occurred trying to reconstruct patterns")
+
+	def about(self):
+		tkMessageBox.showinfo("About", "Tkinter GUI Application\n Development by Leohc92")
+
+	def exit_app(self):
+		if tkMessageBox.askokcancel("Quit", "Do you really want to quit?"):
+			self.root.destroy()
 #basic UI
+	def create_top_menu(self):
+		self.menubar = Menu(self.root)
+
+		self.filemenu = Menu(self.menubar, tearoff=0)
+
+		self.filemenu.add_command(label="Load Project", command=self.load_project)
+		self.filemenu.add_command(label="Save Project", command=self.save_project)
+		self.filemenu.add_separator()
+		self.filemenu.add_command(label="Exit", command=self.exit_app)
+		self.menubar.add_cascade(label="File", menu=self.filemenu)
+
+		self.aboutmenu = Menu(self.menubar, tearoff=0)
+		self.aboutmenu.add_command(label="About", command=self.about)
+		self.menubar.add_cascade(label="About", menu=self.aboutmenu)
+
+		self.root.config(menu=self.menubar)
+
 	def create_top_bar(self):
 		topbar_frame = Frame(self.root)
 		topbar_frame.grid(row=0, column=0, columnspan=12, rowspan=10, padx=5, pady=5, sticky=W+E)
@@ -149,13 +197,17 @@ class DrumMachine():
 	def create_play_bar(self):
 		playbar_frame = Frame(self.root)
 		playbar_frame.grid(row=12, column=0,columnspan=13, sticky=W+E, padx=10, pady=5) 
-		self.start_button = Button(playbar_frame, text='Play', command=self.play_in_threading)
-		self.start_button.grid(row=0, column=0, padx=2, pady=2)
-		button = Button(playbar_frame, text='Stop', command=self.stop_play)
+		button = ttk.Button(playbar_frame, text='Play', command=self.play_in_threading)
+		button.grid(row=0, column=0, padx=2, pady=2)
+		button = ttk.Button(playbar_frame, text='Stop', command=self.stop_play)
 		button.grid(row=0, column=1, padx=2, pady=2)
 		loop = BooleanVar()
-		loopbutton = Checkbutton(playbar_frame, text='Loop', variable=loop, command=lambda:self.loop_play(loop.get()))
+		loopbutton = ttk.Checkbutton(playbar_frame, text='Loop', variable=loop, command=lambda:self.loop_play(loop.get()))
 		loopbutton.grid(row=0, column=2, padx=2, pady=2)
+		photo = PhotoImage(file='images/sig.gif')
+		label = Label(playbar_frame, image=photo)
+		label.image = photo
+		label.grid(row=0, column=3, padx=2, sticky=E)
 
 	def drum_load(self, drum_no):
 		def callback():
@@ -200,16 +252,14 @@ class DrumMachine():
 						continue
 				time.sleep(1/8.0)
 				if self.loop == False: self.keep_playing = False
-		self.start_button.config(state='normal')
 
 	def play_in_threading(self):
-		self.start_button.config(state='disabled')
 		self.thread = threading.Thread(None, self.play, None,(), {})
 		self.thread.start()
 
 	def stop_play(self):
 		self.keep_playing = False
-		self.start_button.config(state='normal')
+		return
 
 	def loop_play(self,xval):
 		self.loop = xval
@@ -217,9 +267,12 @@ class DrumMachine():
 	def app(self):
 		self.root = Tk()
 		self.root.title('Drum Beast')
+		self.create_top_menu()
 		self.create_top_bar()
 		self.create_left_pad()
 		self.create_play_bar()
+		self.root.protocol('WM_DELETE_WINDOW', self.exit_app)
+		self.root.wm_iconbitmap('images/beast.ico')
 		self.root.mainloop()
 
 ###################################################
