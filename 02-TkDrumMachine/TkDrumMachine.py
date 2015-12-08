@@ -197,8 +197,8 @@ class DrumMachine():
 	def create_play_bar(self):
 		playbar_frame = Frame(self.root)
 		playbar_frame.grid(row=12, column=0,columnspan=13, sticky=W+E, padx=10, pady=5) 
-		button = ttk.Button(playbar_frame, text='Play', command=self.play_in_threading)
-		button.grid(row=0, column=0, padx=2, pady=2)
+		self.start_button = ttk.Button(playbar_frame, text='Play', command=self.play_in_threading)
+		self.start_button.grid(row=0, column=0, padx=2, pady=2)
 		button = ttk.Button(playbar_frame, text='Stop', command=self.stop_play)
 		button.grid(row=0, column=1, padx=2, pady=2)
 		loop = BooleanVar()
@@ -230,7 +230,7 @@ class DrumMachine():
 		try:
 			self.s = wave.open(sound_filename, 'rb')
 			sample_rate = self.s.getframerate()
-			channels = self.s.getchannels()
+			channels = self.s.getnchannels()
 			frmt = sound.AFMT_S16_LE
 			self.snd = sound.Output(sample_rate, channels, frmt)
 			s = self.s.readframes(300000)
@@ -245,20 +245,23 @@ class DrumMachine():
 				for item in self.button:
 					try:
 						if item[i].cget('bg') == 'green':
-							if not self.widget_drum_file_name[sel.button.index(item)]:continue
+							if not self.widget_drum_file_name[self.button.index(item)]:continue
 							sound_filename = self.widget_drum_file_name[self.button.index(item)]
 							self.play_sound(sound_filename)
 					except:
 						continue
 				time.sleep(1/8.0)
 				if self.loop == False: self.keep_playing = False
+		self.start_button.config(state='normal')
 
 	def play_in_threading(self):
+		self.start_button.config(state='disabled')
 		self.thread = threading.Thread(None, self.play, None,(), {})
 		self.thread.start()
 
 	def stop_play(self):
 		self.keep_playing = False
+		self.start_button.config(state='normal')
 		return
 
 	def loop_play(self,xval):

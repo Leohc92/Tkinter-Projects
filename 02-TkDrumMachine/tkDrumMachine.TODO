@@ -1,4 +1,4 @@
- ☐ 1. complete test
+ ✔ 1. complete test @done (15-12-08 20:00)
  ☐ 2. The current application checks if the button is green in color to decide whether the button is in the pressed state. Modify the code so that this logic is not decided based on the color of the button, but by a separate variable that keeps track of the selected buttons
  ☐ 3. Add a tempo scale to your drum machine, which lets the user change the tempo of the beats using a slider
  ☐ 4. Add volume control for each drum sample, allowing the user to change the volume individually for each drum sample.
