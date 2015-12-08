@@ -21,25 +21,93 @@ class DrumMachine():
 		self.current_drum_no = 0
 		self.keep_playing = True
 		self.loop = False
+		self.pattern_list = [None]*10
 
 #basic UI
 	def create_top_bar(self):
 		topbar_frame = Frame(self.root)
-		topbar_frame.grid(row=0, column=0, columnspan=12, rowspan=10, padx=5, pady=5)
+		topbar_frame.grid(row=0, column=0, columnspan=12, rowspan=10, padx=5, pady=5, sticky=W+E)
+  		#pattern
+		Label(topbar_frame, text='Pattern Number:').grid(row=0, column=0)
+		self.patt = IntVar()
+		self.patt.set(0)
+		self.prevpatvalue = 0  #to trace last click
+		Spinbox(topbar_frame, from_=0, to=9, width=5, textvariable=self.patt, command=self.record_pattern).grid(row=0, column=1)
+		self.pat_name = Entry(topbar_frame)
+		self.pat_name.grid(row=0, column=2, padx=7, pady=2)
+		self.pat_name.insert(0, 'Pattern %s'%self.patt.get())
+		self.pat_name.config(state='readonly')
 
-		Label(topbar_frame, text='Units:').grid(row=0, column=0, padx=2, pady=5)
+		#units
+		Label(topbar_frame, text='Units:').grid(row=0, column=3, padx=2, pady=5)
 		self.units = IntVar()
 		self.units.set(4)
 		self.units_widget = Spinbox(topbar_frame, from_=1, to=8, width=5, textvariable=self.units, command=self.create_right_pad)
-		self.units_widget.grid(row=0, column=1, padx=2, pady=5)
+		self.units_widget.grid(row=0, column=4, padx=2, pady=5)
 
-		Label(topbar_frame, text='BPUs:').grid(row=0, column=3, padx=2, pady=5)
+		#bpus
+		Label(topbar_frame, text='BPUs:').grid(row=0, column=5, padx=2, pady=5)
 		self.bpu = IntVar()
 		self.bpu.set(4)
 		self.bpu_widget = Spinbox(topbar_frame, from_=1, to=10, width=5, textvariable=self.bpu, command=self.create_right_pad)
-		self.bpu_widget.grid(row=0, column=4, padx=2, pady=5)
+		self.bpu_widget.grid(row=0, column=6, padx=2, pady=5)
 
 		self.create_right_pad()
+
+	def record_pattern(self):
+		pattern_num, bpu, units = self.patt.get(), self.bpu.get(), self.units.get()
+		self.pat_name.config(state='normal')
+		self.pat_name.delete(0, END)
+		self.pat_name.insert(0, 'Pattern %s'%pattern_num)
+		self.pat_name.config(state='readonly')
+		prevpval = self.prevpatvalue
+		self.prevpatvalue = pattern_num
+		c = bpu*units
+		self.buttonpickleformat = [[0]* c for x in range(MAX_DRUM_NUM)]
+		for i in range(MAX_DRUM_NUM):
+			for j  in range(c):
+				if self.button[i][j].config('bg')[-1] == 'green':
+					self.buttonpickleformat[i][j] = 'active'
+		self.pattern_list[prevpval] = {'df':self.widget_drum_file_name, 'bl': self.buttonpickleformat, 'bpu': bpu, 'units':units}
+		self.reconstruct_pattern(pattern_num, bpu, units)
+
+	def reconstruct_pattern(self, pattern_num, bpu, units):
+		self.widget_drum_file_name = [0]*MAX_DRUM_NUM
+		try:
+			self.df = self.pattern_list[pattern_num]['df']
+			for i in range(len(self.df)):
+				file_name = self.df[i]
+				if file_name == 0:
+					self.widget_drum_name[i].delete(0, END)
+					continue
+				self.widget_drum_file_name.insert(i, file_name)
+				drum_name = os.path.basename(file_name)
+				self.widget_drum_name[i].delete(0, END)
+				self.widget_drum_name[i].insert(0, drum_name)
+		except:
+				for i in range(MAX_DRUM_NUM):
+					try: self.df
+					except: self.widget_drum_name[i].delete(0, END)
+		try:
+			bpu = self.pattern_list[pattern_num]['bpu']
+			units = self.pattern_list[pattern_num]['units']
+		except:
+			return		
+		self.bpu_widget.delete(0, END)
+		self.bpu_widget.insert(0, bpu)
+		self.units_widget.delete(0, END)
+		self.units_widget.insert(0, units)
+		self.create_right_pad()
+		c = bpu*units
+		self.create_right_pad()
+		try:
+			for i in range(MAX_DRUM_NUM):
+				for j in range(c):
+					if self.pattern_list[pattern_num]['bl'][i][j] == 'active':
+						self.button[i][j].config(bg='green')
+		except:return
+				
+
 
 	def create_left_pad(self):
 		left_frame = Frame(self.root)
@@ -130,9 +198,9 @@ class DrumMachine():
 							self.play_sound(sound_filename)
 					except:
 						continue
-				time.sleep(3/4.0)
+				time.sleep(1/8.0)
 				if self.loop == False: self.keep_playing = False
-			self.start_button.config(state='normal')
+		self.start_button.config(state='normal')
 
 	def play_in_threading(self):
 		self.start_button.config(state='disabled')
