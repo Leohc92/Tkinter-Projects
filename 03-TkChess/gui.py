@@ -19,7 +19,6 @@ class GUI():
 		canvas_height = self.rows * self.dim_square
 		self.canvas = Canvas(parent, width=canvas_width, height=canvas_height)
 		self.canvas.pack(padx=8, pady=8)
-		self.draw_board()
 
 	def draw_board(self):
 		for r in range(self.rows):
