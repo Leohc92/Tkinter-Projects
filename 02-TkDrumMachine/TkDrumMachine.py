@@ -173,6 +173,7 @@ class DrumMachine():
 		bpu = self.bpu.get()
 		units = self.units.get()
 		c = bpu * units
+		self.playlist =[[0]*c for x in range(MAX_DRUM_NUM)]
 		right_frame = Frame(self.root)
 		right_frame.grid(row=10, column=6, sticky=E+W, padx=10, pady=2)
 		self.button = [[0 for x in range(c)] for x in range(MAX_DRUM_NUM)]
@@ -188,8 +189,10 @@ class DrumMachine():
 			color = 'grey55' if (j/bpu)%2 else 'khaki'
 			if btn.cget('bg')=='green':
 				new_color = color
+				self.playlist[i][j]=0
 			else:
 				new_color = 'green'
+				self.playlist[i][j]=1
 			btn.config(bg=new_color)
 		return callback
 
@@ -241,16 +244,16 @@ class DrumMachine():
 	def play(self):
 		self.keep_playing = True
 		while self.keep_playing:
-			for i in range(len(self.button[0])):
-				for item in self.button:
+			for c in range(len(self.playlist[0])):
+				for r in range(len(self.playlist)):
 					try:
-						if item[i].cget('bg') == 'green':
-							if not self.widget_drum_file_name[self.button.index(item)]:continue
-							sound_filename = self.widget_drum_file_name[self.button.index(item)]
+						if self.playlist[r][c] == 1:
+							if not self.widget_drum_file_name[r]:continue
+							sound_filename = self.widget_drum_file_name[r]
 							self.play_sound(sound_filename)
 					except:
 						continue
-				time.sleep(1/8.0)
+				time.sleep(1/6.0)
 				if self.loop == False: self.keep_playing = False
 		self.start_button.config(state='normal')
 
