@@ -41,7 +41,7 @@ class Board(dict):
 			return result
 
 	def is_on_board(self, coord):
-		if coord[1]<0 or corrd[1]>7 or coord[0]<0 or coord[0]>7:
+		if coord[1]<0 or coord[1]>7 or coord[0]<0 or coord[0]>7:
 			return False
 		else: return True
 
