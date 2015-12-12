@@ -1,25 +1,10 @@
-"""
-Code illustration: 4.07
-
-NO CHANGES FROM PREVIOUS ITERATION
-
-Tkinter GUI Application Development Hotshot
-""" 
-
+#coding:utf8
 import sys
 
-SHORT_NAME = {
- 'R':'Rook',
- 'N':'Knight',
- 'B':'Bishop',
- 'Q':'Queen',
- 'K':'King',
- 'P':'Pawn'
-}
+SHORT_NAME = {'R':'Rook', 'N':'Knight', 'B':'Bishop', 'Q':'Queen', 'K':'King', 'P':'Pawn'}
 
 
 def create_piece(piece, color='white'):
-    ''' Takes a piece name or shortname and returns the corresponding piece instance '''
     if piece in (None, ' '): return
     if len(piece) == 1:
         if piece.isupper(): color = 'white'
@@ -38,7 +23,6 @@ class Piece(object):
         self.color = color
 
     def place(self, board):
-        ''' Keep a reference to the board '''
         self.board = board
 
     def moves_available(self, pos, orthogonal, diagonal, distance):

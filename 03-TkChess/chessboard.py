@@ -1,10 +1,4 @@
-"""
-Code illustration: 4.07
-
-NO CHANGES IN THIS ITERATION
-
-@Tkinter GUI Application Development Hotshot
-""" 
+#coding:utf8
 from copy import deepcopy
 import re
 

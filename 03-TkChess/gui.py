@@ -1,16 +1,4 @@
-"""
-Code illustration: 4.07
-
-METHODS ADDED
-new_game (to start a new game)
-
-METHODS MODIFIED
-__init__ (menu bar and info frame added)
-shift (to change the info label after every move)
-
-
-Tkinter GUI Application Development Hotshot
-""" 
+#coding:utf8
 import chessboard
 import pieces
 from Tkinter import *
@@ -130,7 +118,7 @@ class GUI():
         for coord, piece in self.chessboard.iteritems():
             x,y = self.chessboard.num_notation(coord)
             if piece is not None:
-                filename = "../pieces_image/%s%s.png" % (piece.shortname.lower(),piece.color)
+                filename = "pieces_image/%s%s.png" % (piece.shortname.lower(),piece.color)
                 piecename = "%s%s%s" % (piece.shortname, x, y)
                 if(filename not in self.images):
                     self.images[filename] = ImageTk.PhotoImage(file=filename)
