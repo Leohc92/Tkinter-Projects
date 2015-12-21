@@ -3,12 +3,14 @@ import os
 
 from Tkinter import *
 import tkFileDialog
+import ttk
 
 import player
 
 class GUI:
 
 	alltracks = []
+	indx = 0
 	currentTrack = ''
 
 	def __init__(self, player):
@@ -22,13 +24,46 @@ class GUI:
 
 	def create_button_frame(self):
 		buttonframe = Frame(self.root)
+
+		previcon = PhotoImage(file='icons/previous.gif')
+		prevbtn = Button(buttonframe, image=previcon, borderwidth=0, padx=0, command=self.prev_track)
+		prevbtn.image = previcon
+		prevbtn.grid(row=0, column=0) #sticky
+
+		rewindicon = PhotoImage(file='icons/rewind.gif')
+		rewindbtn = Button(buttonframe, image=rewindicon, borderwidth=0, padx=0, command=self.player.rewind)
+		rewindbtn.image = rewindicon
+		rewindbtn.grid(row=0, column=1)
+
 		self.playicon = PhotoImage(file='icons/play.gif')
 		self.stopicon = PhotoImage(file='icons/stop.gif')
-		self.playbtn = Button(buttonframe, text='play', image=self.playicon, borderwidth=0, 
-			                  padx=0, command=self.toggle_play_pause)
+		self.playbtn = Button(buttonframe, text='play', image=self.playicon, borderwidth=0, padx=0, command=self.toggle_play_pause)
 		self.playbtn.image = self.playicon
-		self.playbtn.grid(row = 0, column=0)
+		self.playbtn.grid(row = 0, column=2)
+
+		fast_fwdicon = PhotoImage(file='icons/fast_fwd.gif')
+		fast_fwdbtn = Button(buttonframe, image=fast_fwdicon, borderwidth=0, padx=0, command=self.player.fast_fwd)
+		fast_fwdbtn.image = fast_fwdicon
+		fast_fwdbtn.grid(row=0, column=3)
+
+		nexticon = PhotoImage(file='icons/next.gif')
+		nextbtn = Button(buttonframe, image=nexticon, borderwidth=0, padx=0, command=self.next_track)
+		nextbtn.image = nexticon
+		nextbtn.grid(row=0, column=4)
+
+		self.muteicon = PhotoImage(file='icons/mute.gif')
+		self.unmuteicon = PhotoImage(file='icons/unmute.gif')
+		self.mutebtn = Button(buttonframe, text='unmute', image=self.unmuteicon, borderwidth=0, padx=0, command=self.toggle_mute)
+		self.mutebtn.image = self.unmuteicon
+		self.mutebtn.grid(row=0, column=5)
+
+		self.volscale = ttk.Scale(buttonframe, from_=0.0, to=1.0, command=self.vol_update)
+		self.volscale.set(0.6)
+		self.volscale.grid(row=0, column=6, padx=5)
+
 		buttonframe.grid(row=0, padx=4, pady=5, sticky=W)
+
+
 
 	def create_list_frame(self)	:
 		list_frame = Frame(self.root)
@@ -44,33 +79,33 @@ class GUI:
 
 
 	def create_bottom_frame(self):
-			bottomframe = Frame(self.root)
-			add_fileicon = PhotoImage(file='icons/add_file.gif')
-			add_filebtn = Button(bottomframe, text='Add File', image=add_fileicon, borderwidth=0, command=self.add_file)
-			add_filebtn.image = add_fileicon
-			add_filebtn.grid(row=0, column=0)
+		bottomframe = Frame(self.root)
+		add_fileicon = PhotoImage(file='icons/add_file.gif')
+		add_filebtn = Button(bottomframe, text='Add File', image=add_fileicon, borderwidth=0, command=self.add_file)
+		add_filebtn.image = add_fileicon
+		add_filebtn.grid(row=0, column=0)
 
-			del_selectedicon = PhotoImage(file='icons/del_selected.gif')
-			del_selectedbtn = Button(bottomframe, text='Delete', image=del_selectedicon, borderwidth=0, command=self.del_selected)
-			del_selectedbtn.image = del_selectedicon
-			del_selectedbtn.grid(row=0, column=1)
+		del_selectedicon = PhotoImage(file='icons/del_selected.gif')
+		del_selectedbtn = Button(bottomframe, text='Delete', image=del_selectedicon, borderwidth=0, command=self.del_selected)
+		del_selectedbtn.image = del_selectedicon
+		del_selectedbtn.grid(row=0, column=1)
 
-			add_diricon = PhotoImage(file='icons/add_dir.gif')
-			add_dirbtn =  Button(bottomframe, text='Add Dir', image=add_diricon, borderwidth=0, command=self.add_dir)
-			add_dirbtn.image = add_diricon
-			add_dirbtn.grid(row=0, column=2)
+		add_diricon = PhotoImage(file='icons/add_dir.gif')
+		add_dirbtn =  Button(bottomframe, text='Add Dir', image=add_diricon, borderwidth=0, command=self.add_dir)
+		add_dirbtn.image = add_diricon
+		add_dirbtn.grid(row=0, column=2)
 
-			del_allicon = PhotoImage(file='icons/delall.gif')
-			del_allbtn = Button(bottomframe, text='Clear All', image=del_allicon, borderwidth=0, command=self.clear_list)
-			del_allbtn.image = del_allicon
-			del_allbtn.grid(row=0, column=3)
+		del_allicon = PhotoImage(file='icons/delall.gif')
+		del_allbtn = Button(bottomframe, text='Clear All', image=del_allicon, borderwidth=0, command=self.clear_list)
+		del_allbtn.image = del_allicon
+		del_allbtn.grid(row=0, column=3)
 
-			bottomframe.grid(row=2, padx=5, pady=5, sticky=W)
+		bottomframe.grid(row=2, padx=5, pady=5, sticky=W)
 
 	def toggle_play_pause(self):
 		if self.playbtn['text'] == 'play':
 			self.playbtn.config(text='stop', image=self.stopicon)
-			self.player.start_play_thread()
+			self.identify_track_to_play()
 		elif self.playbtn['text'] == 'stop':
 			self.playbtn.config(text='play', image=self.playicon)
 			self.player.pause()
@@ -110,8 +145,41 @@ class GUI:
 				self.del_selected()
 		except:
 			indx = 0
-			self.currentTrack = self.listbox.get(indx)
+		self.currentTrack = self.listbox.get(indx)
 		self.player.start_play_thread()
+
+	def vol_update(self, e):
+		vol = float(e)
+		self.player.set_vol(vol)
+
+	def prev_track(self):
+		try:
+			self.player.pause()
+			previndex = self.alltracks.index(self.currentTrack) - 1
+			self.currentTrack = self.alltracks[previndex]
+		except:
+			return
+		self.player.start_play_thread()
+
+	def next_track(self):
+		try:
+			self.player.pause()
+			nextindex = self.alltracks.index(self.currentTrack) + 1
+			self.currentTrack = self.alltracks[nextindex]
+		except:
+			return
+		self.player.start_play_thread()
+
+	def toggle_mute(self):
+		if self.mutebtn.config('text')[-1] == 'unmute':
+			print self.mutebtn.config('text')
+			self.mutebtn.config(text='mute', image=self.muteicon)
+			self.player.mute()
+		elif self.mutebtn.config('text')[-1] == 'mute':
+			print self.mutebtn.config('text')
+			self.mutebtn.config(text='unmute', image=self.unmuteicon)
+			self.player.unmute()
+
 
 if __name__ == '__main__':
 	playerobj = player.Player()
