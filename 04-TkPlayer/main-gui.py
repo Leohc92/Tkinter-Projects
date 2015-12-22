@@ -12,15 +12,33 @@ class GUI:
 	alltracks = []
 	indx = 0
 	currentTrack = ''
+	timer =[0, 0]
+	timepattern = '{0:02d}:{1:02d}'
 
 	def __init__(self, player):
 		self.player = player
 		player.parent = self
 		self.root = Tk()
+		self.create_console_frame()
 		self.create_button_frame()
 		self.create_list_frame()
 		self.create_bottom_frame()
 		self.root.mainloop()
+
+	def create_console_frame(self):
+		cnslfrm = Frame(self.root)
+		photo = PhotoImage(file='icons/glassframe.gif')
+		self.canvas = Canvas(cnslfrm, width=370, height=90)
+		self.canvas.image = photo
+		self.canvas.grid(row=1)
+		self.console = self.canvas.create_image(0, 10, anchor=NW, image=photo)
+		self.clock = self.canvas.create_text(32, 34, anchor=W, fill='#CBE4F6', font="DS-Digital 20", text="00:00")
+		self.songname = self.canvas.create_text(115, 37, anchor=W, fill='#9CEDAC', font="Verdana 10", 
+			text='\"Currently playing: none[00.00]\"')
+		self.progressBar =  ttk.Progressbar(cnslfrm, length=1, mode="determinate")
+		self.progressBar.grid(row=2, columnspan=10, sticky=W+E, padx=5)
+
+		cnslfrm.grid(row=0, padx=0, pady=1)
 
 	def create_button_frame(self):
 		buttonframe = Frame(self.root)
@@ -61,7 +79,7 @@ class GUI:
 		self.volscale.set(0.6)
 		self.volscale.grid(row=0, column=6, padx=5)
 
-		buttonframe.grid(row=0, padx=4, pady=5, sticky=W)
+		buttonframe.grid(row=1, padx=4, pady=5, sticky=W)
 
 
 
@@ -75,7 +93,7 @@ class GUI:
 		scrollbar.pack(side=RIGHT, fill=BOTH)
 		self.listbox.config(yscrollcommand=scrollbar.set)
 		scrollbar.config(command=self.listbox.yview)
-		list_frame.grid(row=1, padx=5)
+		list_frame.grid(row=2, padx=5)
 
 
 	def create_bottom_frame(self):
@@ -100,7 +118,7 @@ class GUI:
 		del_allbtn.image = del_allicon
 		del_allbtn.grid(row=0, column=3)
 
-		bottomframe.grid(row=2, padx=5, pady=5, sticky=W)
+		bottomframe.grid(row=3, padx=5, pady=5, sticky=W)
 
 	def toggle_play_pause(self):
 		if self.playbtn['text'] == 'play':
@@ -146,7 +164,37 @@ class GUI:
 		except:
 			indx = 0
 		self.currentTrack = self.listbox.get(indx)
+		self.launch_play()
+
+	def launch_play(self):
+		try:
+			self.player.pause()
+		except:
+			pass
 		self.player.start_play_thread()
+		song_lenminute = str(int(self.player.song_length/60))
+		song_lensecond = str(int(self.player.song_length%60))
+
+		filename = self.currentTrack.split('/')[-1] + '\n [' + song_lenminute + ':' + song_lensecond + ']'
+		self.canvas.itemconfig(self.songname, text=filename)
+		self.progressBar["maximum"] = self.player.song_length
+		self.update_clock_and_progressbar()
+
+	def update_clock_and_progressbar(self):
+		current_time = self.player.current_time()
+		song_len = self.player.song_len()
+		currtimemin = int(current_time/60)
+		currtimesec = int(current_time%60)
+		currtimestrng  = self.timepattern.format(currtimemin, currtimesec)
+		self.canvas.itemconfig(self.clock, text = currtimestrng)
+		self.progressBar["value"] = current_time
+		self.root.update()
+		if current_time == song_len:
+			self.canvas.itemconfig(self.clock, text='00:00')
+			self.timer =[0,0]
+			self.progressBar["value"] = 0
+		else:
+			self.canvas.after(1000, self.update_clock_and_progressbar)
 
 	def vol_update(self, e):
 		vol = float(e)
