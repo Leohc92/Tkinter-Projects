@@ -7,16 +7,39 @@ FWDREWNDTIME = 20
 
 class Player():
     parent = None
+    paused = False
+    stopped = False
+    current_time = 0
     vol = 0.0
     def play_media(self):
         try:
-            self.myplayer = pyglet.media.Player()             
+            self.myplayer = pyglet.media.Player()    
+            self.myplayer.push_handlers(on_eos=self.what_next)         
             self.source = pyglet.media.load(self.parent.currentTrack)
             self.myplayer.queue(self.source)
             self.myplayer.play()
             pyglet.app.run()
         except:
             pass
+
+    def what_next(self):
+        if self.stopped:
+            self.stopped = False
+            return None
+        if self.parent.loopv.get() == 1:
+            return None
+        if self.parent.loopv.get() == 2:
+            self.parent.launch_play()
+        if self.parent.loopv.get() == 3:
+            self.fetch_next_track()
+
+    def fetch_next_track(self):
+        try:
+            next_trackindx = self.parent.alltracks.index(self.parent.currentTrack) + 1
+            self.parent.currentTrack = self.parent.alltracks[next_trackindx]
+            self.parent.launch_play()
+        except:
+            print 'end of list'
 
     def current_time(self):
         try:
